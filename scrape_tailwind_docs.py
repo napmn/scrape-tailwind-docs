@@ -14,8 +14,14 @@ IGNORED_SECTIONS = [
     'Base Styles',
     'Official Plugins'
 ]
-EMOJIS_PATTERN = re.compile("[" u"\U0001F600-\U0001F64F" "]+", re.UNICODE)
 
+EMOJIS_PATTERN = re.compile(
+    "["
+        u"\U0001F600-\U0001F64F"  # emoticons
+        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+    "]+",
+    re.UNICODE
+)
 
 async def get_tailwind_doc_links_schema(session):
     async with session.get('https://v2.tailwindcss.com/docs') as response:
