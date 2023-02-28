@@ -8,13 +8,12 @@ import aiohttp
 EXTRA_SPACES_NUM = 4
 HORIZONTAL_DELIM_LENGTH = 150
 IGNORED_SECTIONS = [
-    'Getting started',
+    'Getting Started',
     'Core Concepts',
     'Customization',
     'Base Styles',
     'Official Plugins'
 ]
-
 EMOJIS_PATTERN = re.compile(
     "["
         u"\U0001F600-\U0001F64F"  # emoticons
@@ -24,7 +23,7 @@ EMOJIS_PATTERN = re.compile(
 )
 
 async def get_tailwind_doc_links_schema(session):
-    async with session.get('https://v2.tailwindcss.com/docs') as response:
+    async with session.get('https://tailwindcss.com/docs') as response:
         response_text = await response.text()
         doc = html.fromstring(response_text)
         schema = {}
@@ -41,15 +40,15 @@ async def get_tailwind_doc_links_schema(session):
 
 
 async def get_item_data(session, section_name, name, url_path):
-    async with session.get(f'https://v2.tailwindcss.com{url_path}') as response:
+    async with session.get(f'https://tailwindcss.com{url_path}') as response:
         response_text = await response.text()
         doc = html.fromstring(re.sub(EMOJIS_PATTERN, '', response_text))
-        description = '**' + doc.xpath('//p[@class="mt-1 text-lg text-gray-500"]')[0].text + '**'
+        description = '**' + doc.xpath('//p[@class="mt-2 text-lg text-slate-700 dark:text-slate-400"]')[0].text + '**'
         properties_table = doc.xpath('//table[./thead/tr/th/div[text()="Class"]]')[0]
         rows = properties_table.xpath('./tbody/tr')
         parsed_properties = []
         for row in rows:
-            parsed_properties.append(tuple(row.xpath('./td/text()')[:2]))
+            parsed_properties.append(tuple([cell.text_content().strip() for cell in row.xpath('./td')[:2]]))
 
         max_cls_len = max(len(prop[0]) for prop in parsed_properties)
         max_plus_extra = max_cls_len + EXTRA_SPACES_NUM
