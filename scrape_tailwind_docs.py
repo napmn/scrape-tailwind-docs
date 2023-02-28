@@ -1,4 +1,5 @@
 import asyncio
+import re
 import os
 
 import lxml.html as html
@@ -13,10 +14,11 @@ IGNORED_SECTIONS = [
     'Base Styles',
     'Official Plugins'
 ]
+EMOJIS_PATTERN = re.compile("[" u"\U0001F600-\U0001F64F" "]+", re.UNICODE)
 
 
 async def get_tailwind_doc_links_schema(session):
-    async with session.get('https://tailwindcss.com/docs') as response:
+    async with session.get('https://v2.tailwindcss.com/docs') as response:
         response_text = await response.text()
         doc = html.fromstring(response_text)
         schema = {}
@@ -33,9 +35,9 @@ async def get_tailwind_doc_links_schema(session):
 
 
 async def get_item_data(session, section_name, name, url_path):
-    async with session.get(f'https://tailwindcss.com{url_path}') as response:
+    async with session.get(f'https://v2.tailwindcss.com{url_path}') as response:
         response_text = await response.text()
-        doc = html.fromstring(response_text)
+        doc = html.fromstring(re.sub(EMOJIS_PATTERN, '', response_text))
         description = '**' + doc.xpath('//p[@class="mt-1 text-lg text-gray-500"]')[0].text + '**'
         properties_table = doc.xpath('//table[./thead/tr/th/div[text()="Class"]]')[0]
         rows = properties_table.xpath('./tbody/tr')
@@ -54,7 +56,7 @@ async def get_item_data(session, section_name, name, url_path):
             # +2 is for padding around |
             formatted_property = property[1].replace(
                 '\n', '\n|' + ' ' * (max_plus_extra + 2) + '| '
-            ) 
+            )
             row += f' {formatted_property}'
             rows.append(row)
 
